@@ -10,11 +10,13 @@ const state = Object.freeze({
 });
 
 const GRACE_PERIOD = 0.1;
+const SPEED_HACK = 0.5;
 const SPEED_MULTIPLIER = 1.0;
+const START_OFFSET = 10;
 
 class Note {
     constructor(offset) {
-        this.countdown = offset;
+        this.countdown = offset / SPEED_HACK;
         this.is_clickable = false;
     }
     update(delta_time) {
@@ -152,6 +154,7 @@ function draw(lanes) {
 let current_state = state.Menu;
 
 const song = new Audio("magical_cure.mp3");
+song.playbackRate = SPEED_HACK;
 song.volume = 0.01;
 let last_frame_time = -1;
 function menu_tick() {
@@ -173,7 +176,7 @@ function menu_tick() {
         current_state = state.Playing;
         setTimeout(() => {
             song.play();
-        }, INTRO_TIME * 1000);
+        }, INTRO_TIME * 1000 / SPEED_HACK);
     }
 }
 function playing_tick() {
