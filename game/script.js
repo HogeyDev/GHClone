@@ -49,6 +49,7 @@ let keyboard = {
 
 	"Shift": [false, false, false],
     "Enter": [false, false, false],
+    " ": [false, false, false],
 }
 window.onkeydown = (e) => {
 	keyboard[e.key] = [true, true, false];
@@ -90,7 +91,7 @@ function draw_note(x, y, color, is_peg=false) {
 		ctx.fillRect(x, y - 10, LANE_WIDTH, 10);
 	} else {
 		ctx.fillStyle = color;
-		ctx.fillRect(x, y - 10, LANE_WIDTH, TILE_HEIGHT);
+		ctx.fillRect(x, y - TILE_HEIGHT / 2, LANE_WIDTH, TILE_HEIGHT);
 		// ctx.strokeStyle = "#000000";
 		// ctx.lineWidth = 3.0;
 		// ctx.strokeRect(x, y - 10, LANE_WIDTH, TILE_HEIGHT);
@@ -109,11 +110,11 @@ function draw(lanes) {
 	for (let i = 0; i < lanes.length; i++) {
         const notes = lanes[i];
 		const note_color = [
-			"#50FA7B",
-			"#FF5555",
-			"#F1FA8C",
-			"#6272A4",
-			"#FFB86C",
+			"#50fa7b",
+			"#ff5555",
+			"#f1fa8c",
+			"#6272a4",
+			"#ffb86c",
 		][i];
         const x = LANE_LEFT + (LANE_WIDTH + LANE_PADDING) * i;
 		const lane_y = get_y_coord(0.0);
@@ -165,8 +166,10 @@ function menu_tick() {
     const button_x = (canvas.width - button_width) / 2;
     const button_y = (canvas.height - button_height) / 2;
 
-    ctx.fillStyle = "#86cecb";
-    ctx.strokeStyle = "#137a7f";
+    ctx.fillStyle = "#282a36";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#44475a";
+    ctx.strokeStyle = "#f8f8f2";
     ctx.lineWidth = 5;
     ctx.beginPath();
     ctx.roundRect(button_x, button_y, button_width, button_height, [20, 20]);
@@ -174,7 +177,7 @@ function menu_tick() {
     ctx.fill();
     ctx.stroke();
 
-    if (keyboard["Enter"][1]) {
+    if (keyboard[" "][1]) {
         current_state = state.Playing;
         setTimeout(() => {
             song.play();
