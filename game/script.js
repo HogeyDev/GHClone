@@ -83,7 +83,6 @@ function import_song_chord(notes) {
     let new_notes = [[], [], [], [], []];
     let time = 0;
     for (const note of notes) {
-        console.log(note);
         time += note[1];
         for (let i = 0; i < 5; i++) {
             if (note[0] >> i & 1) {
