@@ -83,15 +83,17 @@ import_song_mora([
 
 function draw_note(x, y, color, is_peg=false) {
 	if (is_peg) {
-		ctx.strokeStyle = color;
-		ctx.lineWidth = 5.0;
-		ctx.strokeRect(x, y - 10, LANE_WIDTH, 3);
+		// ctx.strokeStyle = color;
+		// ctx.lineWidth = 5.0;
+		// ctx.strokeRect(x, y - 10, LANE_WIDTH, 3);
+		ctx.fillStyle = color;
+		ctx.fillRect(x, y - 10, LANE_WIDTH, 10);
 	} else {
 		ctx.fillStyle = color;
 		ctx.fillRect(x, y - 10, LANE_WIDTH, TILE_HEIGHT);
-		ctx.strokeStyle = "#000000";
-		ctx.lineWidth = 3.0;
-		ctx.strokeRect(x, y - 10, LANE_WIDTH, TILE_HEIGHT);
+		// ctx.strokeStyle = "#000000";
+		// ctx.lineWidth = 3.0;
+		// ctx.strokeRect(x, y - 10, LANE_WIDTH, TILE_HEIGHT);
 	}
 }
 
@@ -107,11 +109,11 @@ function draw(lanes) {
 	for (let i = 0; i < lanes.length; i++) {
         const notes = lanes[i];
 		const note_color = [
-			"#00ff00",
-			"#ff0000",
-			"#ffff00",
-			"#0000ff",
-			"#ffa500",
+			"#50FA7B",
+			"#FF5555",
+			"#F1FA8C",
+			"#6272A4",
+			"#FFB86C",
 		][i];
         const x = LANE_LEFT + (LANE_WIDTH + LANE_PADDING) * i;
 		const lane_y = get_y_coord(0.0);
@@ -146,7 +148,7 @@ function draw(lanes) {
             const y = get_y_coord(notes[j].countdown);
 			draw_note(x, y, note_color);
         }
-		const lane_color = lane_activation(i, 0) ? "#00a5ff" : "#000000";
+		const lane_color = lane_activation(i, 0) ? "#8be9fd" : "#f8f8f2";
 		draw_note(x, lane_y, lane_color, true);
     }
 }
