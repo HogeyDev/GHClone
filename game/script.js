@@ -1,3 +1,4 @@
+const volume_slider = document.querySelector(".volume-slider");
 const canvas = document.querySelector("canvas");
 const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
@@ -12,7 +13,7 @@ const state = Object.freeze({
 const GRACE_PERIOD = 0.1;
 const SPEED_HACK = 1.0;
 const SPEED_MULTIPLIER = 1.0;
-// const START_OFFSET = 10;
+const START_OFFSET = 0;
 
 class Note {
     constructor(offset) {
@@ -39,6 +40,7 @@ const LANE_PADDING = 10;
 const LANE_LEFT = (canvas.width - LANE_WIDTH * 5 - LANE_PADDING * 4) / 2;
 const lanes = [[], [], [], [], []];
 let game_running = true;
+let combo = 0;
 
 let keyboard = {
 	"d": [false, false, false],
@@ -47,7 +49,7 @@ let keyboard = {
 	"k": [false, false, false],
 	"l": [false, false, false],
 
-	"Shift": [false, false, false],
+	"h": [false, false, false],
     "Enter": [false, false, false],
     " ": [false, false, false],
 }
@@ -58,14 +60,18 @@ window.onkeyup = (e) => {
 	keyboard[e.key] = [false, false, true];
 }
 
+volume_slider.addEventListener("input", () => {
+    song.volume = volume_slider.value / 100;
+});
+
 const BPM = 192;
-const M = 60 / BPM;
+const M = 60 / BPM; // this has basically no use, but it is used to get notes delays in terms of seconds instead of beats
 
 function import_song(notes) {
     console.log(`${notes.reduce((acc, lane) => acc + lane.length, 0)} notes`);
 	for (let i = 0; i < notes.length; i++) {
 		for (let j = 0; j < notes[i].length; j++) {
-			lanes[i].push(new Note(SPEED_MULTIPLIER * (notes[i][j] + INTRO_TIME + SONG_INTRO_TIME)));
+			lanes[i].push(new Note(SPEED_MULTIPLIER * (notes[i][j] + INTRO_TIME + SONG_INTRO_TIME - START_OFFSET)));
 		}
 	}
 }
@@ -73,28 +79,133 @@ function import_song_mora(notes) {
     const new_notes = notes.map(lane => lane.map(note => note * M));
     import_song(new_notes);
 }
+function import_song_chord(notes) {
+    let new_notes = [[], [], [], [], []];
+    let time = 0;
+    for (const note of notes) {
+        console.log(note);
+        time += note[1];
+        for (let i = 0; i < 5; i++) {
+            if (note[0] >> i & 1) {
+                new_notes[i].push(time);
+            }
+        }
+    }
+    import_song_mora(new_notes);
+}
+function mora_to_chord(lanes) {
+    const pairs = [];
+    for (let i = 0; i < lanes.length; i++) {
+        for (const note of lanes[i]) {
+            pairs.push([i, note]);
+        }
+    }
+    pairs.sort((a, b) => a[1] - b[1]);
 
-import_song_mora([
-    [6.5, 8.5, 22.5, 24.5, 28, 28.5, 38.5, 40.5],
-    [1, 3.5, 4.5, 7, 9, 11.5, 13, 15, 17, 19.5, 20.5, 23, 25, 26, 27, 29.5, 30.5, 31.5, 33, 35.5, 36.5, 39, 41],
-    [3, 5.5, 7.5, 9.5, 10.5, 14.5, 15.5, 19, 21.5, 23.5, 25.5, 27.5, 28, 29.5, 31.5, 35, 37.5, 39.5, 41.5],
-    [4, 11, 12.5, 13.5, 20, 26.5, 28.5, 30.5, 36],
-    [0, 2, 12, 16, 18, 32, 34],
+    const compressed = [];
+    for (let i = 0; i < pairs.length;) {
+        const chord = [];
+        const offset = pairs[i][1];
+        while (pairs[i] !== undefined && pairs[i][1] == offset) {
+            chord.push(pairs[i][0]);
+            i++;
+        }
+        const encoded = chord.sort().map((x) => Math.pow(2, x)).reduce((arr, val) => arr + val, 0);
+        compressed.push([encoded, offset]);
+    }
+
+    const delta_compressed = [JSON.parse(JSON.stringify(compressed[0]))];
+    for (let i = 1; i < compressed.length; i++) {
+        const delta = compressed[i][1] - compressed[i - 1][1];
+        delta_compressed.push([compressed[i][0], delta]);
+    }
+
+    return delta_compressed;
+}
+
+const spam_3_2 = (lead_delta) => [
+    [4, lead_delta], [1, 0.25],
+    [8, 0.25], [2, 0.25],
+    [16, 0.25], [2, 0.25],
+    [8, 0.25], [1, 0.25],
+    [4, 0.25], [1, 0.25],
+    [8, 0.25], [2, 0.25],
+    [16, 0.25], [2, 0.25],
+    [8, 0.25], [1, 0.25],
+    [4, 0.25]
+];
+import_song_chord([
+    [16, 0],
+    [2, 1],
+    [16, 1],
+    [4, 1],
+    [2, 0.5],
+    [8, 0.5],
+    [2, 0.5],
+    [4, 1],
+    [1, 1],
+    [2, 0.5],
+    [4, 0.5],
+    [1, 1],
+    [2, 0.5],
+    [4, 0.5],
+    [4, 1],
+    [8, 0.5],
+    [2, 0.5],
+    [16, 0.5],
+    [8, 0.5],
+    [2, 0.5],
+    [8, 0.5],
+    [4, 1],
+    [2, 0.5],
+    [4, 0.5],
+    [16, 0.5],
+    [2, 1],
+    [16, 1],
+    [4, 1],
+    [2, 0.5],
+    [8, 0.5],
+    [2, 0.5],
+    [4, 1],
+    [1, 1],
+    [2, 0.5],
+    [4, 0.5],
+    [1, 1],
+    [2, 0.5],
+    [4, 0.5],
+    [2, 0.5],
+    [8, 0.5],
+    [2, 0.5],
+    [4, 0.5],
+    [0b00101, 0.5],
+    [0b01001, 0.5],
+    [0b00110, 1],
+    [0b01010, 1],
+    [0b00110, 1],
+    [16, 0.5],
+    [2, 1],
+    [16, 1],
+    [4, 1],
+    [2, 0.5],
+    [8, 0.5],
+    [2, 0.5],
+    [4, 1],
+    [1, 1],
+    [2, 0.5],
+    [4, 0.5],
+    [1, 1],
+    [2, 0.5],
+    [4, 0.5],
+    ...spam_3_2(4),
 ]);
 
 function draw_note(x, y, color, is_peg=false) {
 	if (is_peg) {
-		// ctx.strokeStyle = color;
-		// ctx.lineWidth = 5.0;
-		// ctx.strokeRect(x, y - 10, LANE_WIDTH, 3);
 		ctx.fillStyle = color;
-		ctx.fillRect(x, y - 10, LANE_WIDTH, 10);
+		ctx.fillRect(x, y - 5, LANE_WIDTH, 10);
 	} else {
 		ctx.fillStyle = color;
 		ctx.fillRect(x, y - TILE_HEIGHT / 2, LANE_WIDTH, TILE_HEIGHT);
-		// ctx.strokeStyle = "#000000";
-		// ctx.lineWidth = 3.0;
-		// ctx.strokeRect(x, y - 10, LANE_WIDTH, TILE_HEIGHT);
 	}
 }
 
@@ -107,6 +218,9 @@ function lane_activation(i, col) {
 }
 
 function draw(lanes) {
+    ctx.fillStyle = "#f8f8f240";
+    ctx.font = "400px sans";
+    ctx.fillText(combo, (canvas.width - ctx.measureText(combo).width) / 2, 600);
 	for (let i = 0; i < lanes.length; i++) {
         const notes = lanes[i];
 		const note_color = [
@@ -149,6 +263,12 @@ function draw(lanes) {
             const y = get_y_coord(notes[j].countdown);
 			draw_note(x, y, note_color);
         }
+        if (hit_note) {
+            combo++;
+        }
+        if (missed_note) {
+            combo = 0;
+        }
 		const lane_color = lane_activation(i, 0) ? "#8be9fd" : "#f8f8f2";
 		draw_note(x, lane_y, lane_color, true);
     }
@@ -157,8 +277,9 @@ function draw(lanes) {
 let current_state = state.Menu;
 
 const song = new Audio("magical_cure.mp3");
+song.currentTime = START_OFFSET;
 song.playbackRate = SPEED_HACK;
-song.volume = 0.01;
+song.volume = volume_slider.value / 100;
 let last_frame_time = -1;
 function menu_tick() {
     const button_width = canvas.width * 0.15;
@@ -181,11 +302,11 @@ function menu_tick() {
         current_state = state.Playing;
         setTimeout(() => {
             song.play();
-        }, INTRO_TIME * 1000 / SPEED_HACK);
+        }, (INTRO_TIME - START_OFFSET) * 1000 / SPEED_HACK);
     }
 }
 function playing_tick() {
-    if (keyboard["Shift"][1]) {
+    if (keyboard["h"][1]) {
 		game_running = !game_running;
         if (game_running) {
             song.play();
