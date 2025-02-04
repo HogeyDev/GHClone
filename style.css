@@ -1,4 +1,23 @@
-* {
-    margin: 0;
-    overflow: hidden;
-}    
+.menu-buttons {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    gap: 20px;
+}
+
+button {
+    width: 13vw;
+    height: 13vh;
+    font-size: 4vw;
+
+    background-color: #ff5555;
+    color: #f8f8f2;
+    border: none;
+    border-radius: 1vw;
+}
+
+body {
+    background-color: #282a36;
+}
